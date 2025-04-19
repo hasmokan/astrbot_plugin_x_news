@@ -75,3 +75,6 @@ class MyPlugin(Star):
 
         except Exception as e:
             logger.info(f"执行命令时发生错误: {str(e)}")
+
+    async def terminate(self):
+        '''可选择实现 terminate 函数，当插件被卸载/停用时会调用。'''
