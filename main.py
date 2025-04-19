@@ -20,7 +20,7 @@ class MyPlugin(Star):
 
     @filter.command("get_x_news")
     async def get_x_news(self, event: AstrMessageEvent):
-        '''获取彩虹六号新闻'''
+        '''获取x新闻'''
         user_name = event.get_sender_name()
         message_str = event.message_str
         message_chain = event.get_messages()
