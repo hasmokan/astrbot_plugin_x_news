@@ -27,7 +27,8 @@ class MyPlugin(Star):
         logger.info(message_chain)
         
         result = subprocess.run(['node', 'fetch_tweets.cjs'], capture_output=True, text=True, check=True)
-        yield event.plain_result(f"Hello, {user_name}, 你发了 {result.stdout}!") # 发送一条纯文本消息
+        logger.info(result.stdout)
+        # yield event.plain_result(f"Hello, {user_name}, 你发了 {result.stdout}!") # 发送一条纯文本消息
         # try:
         #     # 执行 node 命令来运行 JavaScript 文件
         #     result = subprocess.run(['node', 'fetch_tweets.cjs'], capture_output=True, text=True, check=True)
