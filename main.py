@@ -47,6 +47,10 @@ class MyPlugin(Star):
         else:
             yield event.plain_result("抱歉，获取新闻时出现了问题喵~ (｡ŏ_ŏ)")
 
+    @filter.command("send_daily_x_news")
+    async def handle_send_daily_x_news(self, event: AstrMessageEvent): 
+        await self.send_daily_news()
+
 
     async def fetch_and_analyze_tweets_command(self, event: AstrMessageEvent):
         '''获取x新闻'''
@@ -97,25 +101,14 @@ class MyPlugin(Star):
         except Exception as e:
             logger.info(f"执行命令时发生错误: {str(e)}")
 
-    async def fetch_and_analyze_tweets_auto(self, event: AstrMessageEvent):
+    async def fetch_and_analyze_tweets_auto(self):
         '''获取x新闻'''
-        message_chain = event.get_messages()
-        logger.info(message_chain)
         # 获取当前脚本所在的目录
         current_dir = os.path.dirname(os.path.abspath(__file__))
         # 构建 fetch-tweets.cjs 的绝对路径
         file_path = os.path.join(current_dir, 'fetch-tweets.cjs')
         command = ["node", file_path]
 
-        func_tools_mgr = self.context.get_llm_tool_manager()
-
-        # 获取用户当前与 LLM 的对话以获得上下文信息。
-        curr_cid = await self.context.conversation_manager.get_curr_conversation_id(event.unified_msg_origin) # 当前用户所处对话的对话id，是一个 uuid。
-        conversation = None # 对话对象
-        context = [] # 上下文列表
-        if curr_cid:
-            conversation = await self.context.conversation_manager.get_conversation(event.unified_msg_origin, curr_cid)
-            context = json.loads(conversation.history)
         try:
             # 创建异步子进程
             process = await asyncio.create_subprocess_exec(
@@ -136,7 +129,6 @@ class MyPlugin(Star):
             llm_response = await self.context.get_using_provider().text_chat(
                 prompt="你必须分点表述，并且每句话结尾加上可爱的语气词,请根据以下电竞相关推文数据生成分析报告，重点关注战队人员变动、赛事进展与结果、选手动态等方面：梳理战队人员变动情况，包括选手加入、离开、转会等，说明对战队实力的潜在影响，如 m0NESY 离开 G2 加入 Falcons，degster 被 Falcons 板凳等事件。总结近期赛事的关键进展，如欧洲 MRQ 各轮次的比赛结果、重要对决，以及 PGL Bucharest 的比赛进程和最终排名。分析选手动态，例如 degster 获得 MVP，m0NESY 在比赛中的表现，以及选手之间的互动和相关言论。指出数据中体现的电竞行业趋势或值得关注的现象，如战队的战术调整、选手的市场价值变化等。以清晰的结构呈现分析内容，分点阐述，突出重点信息。如果推文数据中存在之前播报过的新闻，那么则删除相应的数据，只保留最新的数据" + stdout,
                 session_id=None, # 此已经被废弃
-                contexts=context,
                 image_urls=[], # 图片链接，支持路径和网络链接
                 system_prompt="必须分点阐述，并且带上可爱的语气词",
             )
@@ -192,7 +184,7 @@ class MyPlugin(Star):
                 logger.error(traceback.format_exc())
                 await asyncio.sleep(300)
     
-    @filter.command("news_status")
+    @filter.command("x_news_status")
     async def check_status(self, event: AstrMessageEvent):
         """检查插件状态"""
         sleep_time = self.calculate_sleep_time()
@@ -215,13 +207,8 @@ class MyPlugin(Star):
                 await asyncio.sleep(10)
         
         try:
-            # 创建一个模拟的event对象用于获取新闻
-            from astrbot.api.event import AstrMessageEvent
-            event = AstrMessageEvent()
-            event.unified_msg_origin = "system"
-            
             # 获取新闻数据
-            result = await self.fetch_and_analyze_tweets_auto(event)
+            result = await self.fetch_and_analyze_tweets_auto()
             if not result:
                 logger.info("获取新闻数据失败")
                 return
@@ -249,11 +236,11 @@ class MyPlugin(Star):
                     logger.info(f"已向群 {group_id} 推送每日新闻")
                     await asyncio.sleep(1)  # 避免发送过快
                 except Exception as e:
-                    logger.info(f"向群组 {group_id} 推送消息时出错: {e}")
-                    traceback.logger.info_exc()
+                    logger.error(f"向群组 {group_id} 推送消息时出错: {e}")
+                    logger.error(traceback.format_exc())
         except Exception as e:
-            logger.info(f"推送每日新闻时出错: {e}")
-            traceback.logger.info_exc()
+            logger.error(f"推送每日新闻时出错: {e}")
+            logger.error(traceback.format_exc())
 
 
     async def terminate(self):
