@@ -154,14 +154,21 @@ class MyPlugin(Star):
     def calculate_sleep_time(self):
         """计算到下一次推送时间的秒数"""
         now = datetime.datetime.now()
-        hour, minute = map(int, self.push_time.split(':'))
-        
-        tomorrow = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        if tomorrow <= now:
-            tomorrow += datetime.timedelta(days=1)
+        try:
+            # 处理时间格式，支持 HH:MM 和 HH.MM 格式
+            time_str = self.push_time.replace('.', ':')
+            hour, minute = map(int, time_str.split(':'))
             
-        seconds = (tomorrow - now).total_seconds()
-        return seconds
+            tomorrow = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            if tomorrow <= now:
+                tomorrow += datetime.timedelta(days=1)
+                
+            seconds = (tomorrow - now).total_seconds()
+            return seconds
+        except ValueError as e:
+            logger.error(f"时间格式错误: {self.push_time}, 期望格式: HH:MM 或 HH.MM")
+            # 默认返回24小时
+            return 24 * 3600
 
     # 定时任务
     async def daily_task(self):
@@ -181,8 +188,8 @@ class MyPlugin(Star):
                 # 再等待一段时间，避免重复推送
                 await asyncio.sleep(60)
             except Exception as e:
-                logger.info(f"定时任务出错: {e}")
-                traceback.logger.info_exc()
+                logger.error(f"定时任务出错: {e}")
+                logger.error(traceback.format_exc())
                 await asyncio.sleep(300)
     
     @filter.command("news_status")
