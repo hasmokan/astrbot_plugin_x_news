@@ -12,12 +12,12 @@ import json
 class MyPlugin(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
-        # self.config = config
-        # self.target_groups = config.get("target_groups", [])
-        # self.push_time = config.get("push_time", "08:00")
+        self.config = config
+        self.target_groups = config.get("target_groups", [])
+        self.push_time = config.get("push_time", "08:00")
         
-        # # 启动定时任务
-        # asyncio.create_task(self.daily_task())
+        # 启动定时任务
+        asyncio.create_task(self.daily_task())
 
     @filter.on_astrbot_loaded()
     async def on_astrbot_loaded(self):
@@ -42,7 +42,10 @@ class MyPlugin(Star):
     @filter.command("get_x_news_auto")
     async def handle_x_news_command_auto(self, event: AstrMessageEvent):
         result = await self.fetch_and_analyze_tweets_auto(event)
-        yield event.plain_result(result)
+        if result and hasattr(result, 'completion_text'):
+            yield event.plain_result(result.completion_text)
+        else:
+            yield event.plain_result("抱歉，获取新闻时出现了问题喵~ (｡ŏ_ŏ)")
 
 
     async def fetch_and_analyze_tweets_command(self, event: AstrMessageEvent):
@@ -167,7 +170,7 @@ class MyPlugin(Star):
             try:
                 # 计算到下次推送的时间
                 sleep_time = self.calculate_sleep_time()
-                print(f"下次推送将在 {sleep_time/3600:.2f} 小时后")
+                logger.info(f"下次推送将在 {sleep_time/3600:.2f} 小时后")
                 
                 # 等待到设定时间
                 await asyncio.sleep(sleep_time)
@@ -178,8 +181,8 @@ class MyPlugin(Star):
                 # 再等待一段时间，避免重复推送
                 await asyncio.sleep(60)
             except Exception as e:
-                print(f"定时任务出错: {e}")
-                traceback.print_exc()
+                logger.info(f"定时任务出错: {e}")
+                traceback.logger.info_exc()
                 await asyncio.sleep(300)
     
     @filter.command("news_status")
@@ -195,6 +198,56 @@ class MyPlugin(Star):
             f"推送时间: {self.push_time}\n"
             f"距离下次推送还有: {hours}小时{minutes}分钟"
         )
+
+    # 向指定群组推送60s新闻
+    async def send_daily_news(self):
+        """向所有目标群组推送x新闻"""
+        if not hasattr(self, "client"):
+            logger.info("==注意==: 尚未获取client，等待client获取中...")
+            while not hasattr(self, "client"):
+                await asyncio.sleep(10)
+        
+        try:
+            # 创建一个模拟的event对象用于获取新闻
+            from astrbot.api.event import AstrMessageEvent
+            event = AstrMessageEvent()
+            event.unified_msg_origin = "system"
+            
+            # 获取新闻数据
+            result = await self.fetch_and_analyze_tweets_auto(event)
+            if not result:
+                logger.info("获取新闻数据失败")
+                return
+                
+            if not self.target_groups:
+                logger.info("未配置目标群组")
+                return
+                
+            logger.info(f"准备向 {len(self.target_groups)} 个群组推送每日新闻")
+            
+            for group_id in self.target_groups:
+                try:
+                    # 发送文本新闻
+                    text_message = [
+                        {
+                            "type": "text",
+                            "data": {"text": result.completion_text},
+                        }
+                    ]
+                    
+                    logger.info(f"向群组 {group_id} 发送新闻")
+                    payloads = {"group_id": group_id, "message": text_message}
+                    await self.client.api.call_action("send_group_msg", **payloads)
+                    
+                    logger.info(f"已向群 {group_id} 推送每日新闻")
+                    await asyncio.sleep(1)  # 避免发送过快
+                except Exception as e:
+                    logger.info(f"向群组 {group_id} 推送消息时出错: {e}")
+                    traceback.logger.info_exc()
+        except Exception as e:
+            logger.info(f"推送每日新闻时出错: {e}")
+            traceback.logger.info_exc()
+
 
     async def terminate(self):
         '''可选择实现 terminate 函数，当插件被卸载/停用时会调用。'''
