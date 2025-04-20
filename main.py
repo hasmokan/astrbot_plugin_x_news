@@ -41,7 +41,7 @@ class MyPlugin(Star):
 
     @filter.command("get_x_news_auto")
     async def handle_x_news_command_auto(self, event: AstrMessageEvent):
-        result = await self.fetch_and_analyze_tweets_auto(event)
+        result = await self.fetch_and_analyze_tweets_auto()
         if result and hasattr(result, 'completion_text'):
             yield event.plain_result(result.completion_text)
         else:
