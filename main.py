@@ -41,7 +41,9 @@ class MyPlugin(Star):
 
     @filter.command("get_x_news_auto")
     async def handle_x_news_command_auto(self, event: AstrMessageEvent):
-        await self.fetch_and_analyze_tweets_auto(event)
+        result = await self.fetch_and_analyze_tweets_auto(event)
+        yield event.plain_result(result)
+
 
     async def fetch_and_analyze_tweets_command(self, event: AstrMessageEvent):
         '''获取x新闻'''
@@ -138,7 +140,7 @@ class MyPlugin(Star):
 
             logger.info(llm_response.completion_text)
             
-            yield event.plain_result(llm_response.completion_text)
+            return llm_response
 
 
         except Exception as e:
