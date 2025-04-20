@@ -54,13 +54,18 @@ class MyPlugin(Star):
 
     async def fetch_and_analyze_tweets_command(self, event: AstrMessageEvent):
         '''获取x新闻'''
-        message_chain = event.get_messages()
-        logger.info(message_chain)
         # 获取当前脚本所在的目录
         current_dir = os.path.dirname(os.path.abspath(__file__))
+        # 构建 .env 文件的绝对路径
+        env_path = os.path.join(current_dir, '.env')
         # 构建 fetch-tweets.cjs 的绝对路径
         file_path = os.path.join(current_dir, 'fetch-tweets.cjs')
+
+        # 设置环境变量并运行命令
         command = ["node", file_path]
+        env = os.environ.copy()
+        env["ENV_FILE_PATH"] = env_path  # 传递 .env 文件的绝对路径
+
 
         func_tools_mgr = self.context.get_llm_tool_manager()
 
@@ -105,9 +110,15 @@ class MyPlugin(Star):
         '''获取x新闻'''
         # 获取当前脚本所在的目录
         current_dir = os.path.dirname(os.path.abspath(__file__))
+        # 构建 .env 文件的绝对路径
+        env_path = os.path.join(current_dir, '.env')
         # 构建 fetch-tweets.cjs 的绝对路径
         file_path = os.path.join(current_dir, 'fetch-tweets.cjs')
+
+        # 设置环境变量并运行命令
         command = ["node", file_path]
+        env = os.environ.copy()
+        env["ENV_FILE_PATH"] = env_path  # 传递 .env 文件的绝对路径
 
         try:
             # 创建异步子进程
@@ -130,7 +141,7 @@ class MyPlugin(Star):
                 prompt="你必须分点表述，并且每句话结尾加上可爱的语气词,请根据以下电竞相关推文数据生成分析报告，重点关注战队人员变动、赛事进展与结果、选手动态等方面：梳理战队人员变动情况，包括选手加入、离开、转会等，说明对战队实力的潜在影响，如 m0NESY 离开 G2 加入 Falcons，degster 被 Falcons 板凳等事件。总结近期赛事的关键进展，如欧洲 MRQ 各轮次的比赛结果、重要对决，以及 PGL Bucharest 的比赛进程和最终排名。分析选手动态，例如 degster 获得 MVP，m0NESY 在比赛中的表现，以及选手之间的互动和相关言论。指出数据中体现的电竞行业趋势或值得关注的现象，如战队的战术调整、选手的市场价值变化等。以清晰的结构呈现分析内容，分点阐述，突出重点信息。如果推文数据中存在之前播报过的新闻，那么则删除相应的数据，只保留最新的数据" + stdout,
                 session_id=None, # 此已经被废弃
                 image_urls=[], # 图片链接，支持路径和网络链接
-                system_prompt="必须分点阐述，并且带上可爱的语气词,不要使用markdown格式,因为在qq中无法显示markdown格式，会有很多丑陋的符号，但是你可以使用1. 2. 3. 类似的来分点描述，具体情况请你根据实际情况来决定",
+                system_prompt="必须分点阐述，并且带上可爱的语气词,不要使用markdown格式,因为在qq中无法显示markdown格式，会有很多丑陋的符号，但是你可以使用1. 2. 3. 类似的来分点描述，具体情况请你根据实际情况来决定,【对话示例】  用户：机器学习是什么？  咯咯哒：就像教小鸡认米粒呀咯咯哒！给好多好多例子（扑棱翅膀），慢慢就会自己找到最胖的谷粒啦~咯哒！✧(≖ ◡ ≖✿)  ",
             )
 
             logger.info(llm_response.completion_text)
