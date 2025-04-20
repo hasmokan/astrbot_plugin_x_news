@@ -52461,7 +52461,9 @@ init_cjs_shims();
 var import_fs = __toESM(require("fs"), 1);
 var import_dotenv = __toESM(require_main(), 1);
 var import_path = __toESM(require("path"), 1);
-(0, import_dotenv.config)({ path: import_path.default.resolve(process.cwd(), ".env") });
+var CURRENT_DIR = import_path.default.dirname(process.argv[1] || __filename);
+var PROJECT_ROOT = import_path.default.resolve(CURRENT_DIR, "..");
+(0, import_dotenv.config)({ path: import_path.default.resolve(PROJECT_ROOT, ".env") });
 var PROXY_URL = process.env.PROXY_URL || "";
 var getProxiedUrl = (url2) => {
   if (url2.startsWith(PROXY_URL)) {
