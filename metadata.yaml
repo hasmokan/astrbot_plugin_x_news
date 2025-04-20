@@ -3,4 +3,4 @@ desc: 这是 AstrBot 的用于获取x新闻插件，支持获取x新闻。 # 插
 help: 输入 /keyword 查看关键词回复帮助。 # 插件的帮助信息
 version: v1.0 # 插件版本号。格式：v1.1.1 或者 v1.1
 author: hasmokan # 作者
-repo: https://github.com/Soulter/helloworld # 插件的仓库地址
+repo: https://github.com/hasmokan/astrbot_plugin_x_news # 插件的仓库地址
