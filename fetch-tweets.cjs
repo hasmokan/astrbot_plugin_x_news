@@ -52466,7 +52466,7 @@ console.log("\u5F53\u524D\u6587\u4EF6\u8DEF\u5F84 (__filename):", __filename);
 console.log("\u5F53\u524D\u6587\u4EF6\u6240\u5728\u76EE\u5F55 (__dirname):", __dirname);
 console.log("\u6267\u884C\u811A\u672C\u8DEF\u5F84 (process.argv[1]):", process.argv[1]);
 console.log("\u5F53\u524D\u6587\u4EF6\u6240\u5728\u76EE\u5F55 (path.dirname(process.argv[1])):", import_path.default.dirname(process.argv[1] || __filename));
-var ENV_PATH = process.env.ENV_FILE_PATH || import_path.default.resolve(__dirname, "../.env");
+var ENV_PATH = process.env.ENV_FILE_PATH || import_path.default.resolve(__dirname, ".env");
 (0, import_dotenv.config)({ path: ENV_PATH });
 console.log("ENV_PATH:", ENV_PATH);
 console.log("\u5C1D\u8BD5\u52A0\u8F7D\u7684 .env \u6587\u4EF6\u662F\u5426\u5B58\u5728:", import_fs.default.existsSync(ENV_PATH));
