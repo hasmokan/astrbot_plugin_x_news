@@ -1,8 +1,4 @@
-# helloworld
-
-AstrBot 插件模板
-
-A template plugin for AstrBot plugin feature
+# 用于拉取X的cs赛事新闻
 
 # 支持
 
